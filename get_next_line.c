@@ -1,9 +1,21 @@
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-#include "my.h"
 #include "get_next_line.h"
+
+int	my_strlen(char const *str)
+{
+	int i = 0;
+
+	if (str == NULL)
+		return (0);
+	while (str[i] != '\0')
+	{
+		i++;
+	}
+
+	return (i);
+}
 
 char	*str_merge(char const *dest, char const *src, int size)
 {
@@ -100,7 +112,6 @@ char	*get_next_line(const int fd)
 	{
 		lign = (char *)malloc((size_lign + 1) * sizeof(char));
 		lign = my_strdup_lign(str, size_lign);
-		printf("%s\n", lign);
 		str += (size_lign + 1);
 	}
 	if (str[size_lign + 1] == '\0')
