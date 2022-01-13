@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "my.h"
 #include "get_next_line.h"
@@ -49,7 +50,7 @@ char	*my_strdup_lign(char const *str, int size)
 
 	if (strcpy == NULL)
 		return (NULL);
-	while (str[i] != '\n' || str[i] != '\0')
+	while (i < size)
 	{
 		strcpy[i] = str[i];
 		i++;
@@ -90,17 +91,19 @@ char	*get_next_line(const int fd)
 	{
 		str = get_file_to_str(fd);
 	}
-	while (*str != '\n' || *str != '\0')
+	while (*str != '\n' && *str != '\0')
 	{
+		str++;
 		size_lign++;
 	}
-	if (str[size_lign] == '\n')
+	if (str[size_lign + 1] == '\n')
 	{
 		lign = (char *)malloc((size_lign + 1) * sizeof(char));
 		lign = my_strdup_lign(str, size_lign);
+		printf("%s\n", lign);
 		str += (size_lign + 1);
 	}
-	if (str[size_lign] == '\0')
+	if (str[size_lign + 1] == '\0')
 	{
 		return (str);
 	}
