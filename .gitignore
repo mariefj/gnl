@@ -4,3 +4,4 @@ main.c
 *.o
 vgcore*
 test.txt
+*.out
