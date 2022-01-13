@@ -3,7 +3,7 @@
 
 #include "get_next_line.h"
 
-int	my_strlen(char const *str)
+static int	my_strlen(char const *str)
 {
 	int i = 0;
 
@@ -17,7 +17,7 @@ int	my_strlen(char const *str)
 	return (i);
 }
 
-char	*str_merge(char const *dest, char const *src, int size)
+static char	*str_merge(char const *dest, char const *src, int size)
 {
 	int i = 0;
 	int j = 0;
@@ -40,7 +40,7 @@ char	*str_merge(char const *dest, char const *src, int size)
 	return (new);
 }
 
-char	*get_str_end_file(char *content, int count)
+static char	*get_str_end_file(char *content, int count)
 {
 	int i = 0;
 	char *str = (char *)malloc((count + 1) * sizeof(char));
@@ -55,7 +55,7 @@ char	*get_str_end_file(char *content, int count)
 	return (str);
 }
 
-char	*my_strdup_lign(char const *str, int size)
+static char	*my_strdup_lign(char const *str, int size)
 {
 	int i = 0;
 	char *strcpy = (char *)malloc((size + 1) * sizeof(char));
