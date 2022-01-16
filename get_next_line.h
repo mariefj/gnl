@@ -2,7 +2,7 @@
 #define _GET_NEXT_LINE_H_
 
 #ifndef READ_SIZE
-#define READ_SIZE 20
+#define READ_SIZE 10
 
 #endif
 

@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "get_next_line.h"
 
@@ -15,6 +16,33 @@ static int	my_strlen(char const *str)
 	}
 
 	return (i);
+}
+
+static char	*my_append_c(char *str, char c)
+{
+	int i = 0;
+	int len = my_strlen(str) + 2;
+	char *new_str = (char *)malloc(len * sizeof(char));
+
+	if (new_str == NULL)
+		return (NULL);
+	if (str == NULL)
+	{
+		str = (char *)malloc(1 * sizeof(char));
+		if (str == NULL)
+			return (NULL);
+		str[0] = '\0';
+	}
+	while (str[i] != '\0')
+	{
+		new_str[i] = str[i];
+		i++;
+	}
+	new_str[i] = c;
+	new_str[i + 1] = '\0';
+	free(str);
+
+	return (new_str);
 }
 
 static char	*str_merge(char const *dest, char const *src, int size)
@@ -55,24 +83,7 @@ static char	*get_str_end_file(char *content, int count)
 	return (str);
 }
 
-static char	*my_strdup_lign(char const *str, int size)
-{
-	int i = 0;
-	char *strcpy = (char *)malloc((size + 1) * sizeof(char));
-
-	if (strcpy == NULL)
-		return (NULL);
-	while (i < size)
-	{
-		strcpy[i] = str[i];
-		i++;
-	}
-	strcpy[i] = '\0';
-
-	return (strcpy);
-}
-
-char	*get_file_to_str(int fd)
+static char	*get_content_to_str(int fd)
 {
 	int count = READ_SIZE;
 	char content[READ_SIZE];
@@ -97,27 +108,18 @@ char	*get_next_line(const int fd)
 {
 	static char *str = NULL;
 	int size_lign = 0;
-	char *lign;
+	char *lign = NULL;
 
 	if (str == NULL)
 	{
-		str = get_file_to_str(fd);
+		str = get_content_to_str(fd);
 	}
-	while (*str != '\n' && *str != '\0')
+	while (str[size_lign] != '\n' && str[size_lign] != '\0')
 	{
-		str++;
+		lign = my_append_c(lign, str[size_lign]);
 		size_lign++;
 	}
-	if (str[size_lign + 1] == '\n')
-	{
-		lign = (char *)malloc((size_lign + 1) * sizeof(char));
-		lign = my_strdup_lign(str, size_lign);
-		str += (size_lign + 1);
-	}
-	if (str[size_lign + 1] == '\0')
-	{
-		return (str);
-	}
+	str += (size_lign + 1);
 
 	return (lign);
 }
