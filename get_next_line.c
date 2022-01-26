@@ -121,19 +121,19 @@ int	find_n(char *str)
 
 char	*get_next_line(const int fd)
 {
-	static char buff[READ_SIZE] = "abc\ndefg";
+	static char buff[READ_SIZE] = "\0";
 	int pos = find_n(buff);
 
 	// 2 buff n'est pas vide et contient un '\n'
 	if (pos != -1)
 	{
 		char *str = malloc((pos + 1) * sizeof(char));
+		int buff_len = my_strlen(buff);
 
 		my_memcpy(str, buff, pos);
 		str[pos] = '\0';
-
-		my_memmove(buff, buff + pos + 1, READ_SIZE - pos);
-		buff[READ_SIZE - pos] = '\0';
+		my_memmove(buff, buff + pos + 1, buff_len - pos);
+		buff[buff_len - pos] = '\0';
 
 		return (str);
 	}
@@ -144,7 +144,7 @@ char	*get_next_line(const int fd)
 		{
 			char stream[READ_SIZE];
 			int readchar = read(fd, stream, READ_SIZE);
-			if (readchar == -1)
+			if (readchar == -1 || readchar == 0)
 				return (NULL);
 			int pos_stream = find_n(stream);
 
@@ -165,25 +165,7 @@ char	*get_next_line(const int fd)
 			// 5 stdin ne contient pas de '\n' dans READ_SIZE
 			else
 			{
-				char *str = malloc(READ_SIZE * sizeof(char));
-				int size = 0;
-
-				while(pos_stream == -1)
-				{
-					pos_stream = find_n(stream);
-					int readchar = read(fd, stream, READ_SIZE);
-					if (readchar == -1)
-						return (NULL);
-					if (my_strlen(str) == READ_SIZE)
-						my_memcpy(str, stream, READ_SIZE);
-					str = str_merge(str, stream, READ_SIZE);
-					size += READ_SIZE;
-				}
-
-				pos_stream = find_n(stream);
-				my_memcpy(buff, stream, size - pos_stream);
-				buff[size - pos_stream] = '\0';
-
+				return (get_next_line(fd));
 			}
 		}
 
@@ -192,6 +174,9 @@ char	*get_next_line(const int fd)
 		{
 			char stream[READ_SIZE];
 			int readchar = read(fd, stream, READ_SIZE);
+
+			if (readchar == 0)
+				return (buff);
 			if (readchar == -1)
 				return (NULL);
 			int pos_stream = find_n(stream);
@@ -203,12 +188,9 @@ char	*get_next_line(const int fd)
 				char *str = malloc(((pos_stream + 1) + buff_len) * sizeof(char));
 
 				my_memcpy(str, buff, buff_len);
-				// printf("str = %s\n", str);
 				my_memcpy(str + buff_len, stream, pos_stream);
-				// printf("str after = %s\n", str);
-				my_memcpy(buff, stream + pos_stream + 1, READ_SIZE- pos_stream);
-				printf("buff = %s\n", str);
-				buff[READ_SIZE - pos_stream] = '\0';
+				my_memcpy(buff, stream + pos_stream + 1, readchar - pos_stream);
+				buff[readchar - pos_stream] = '\0';
 
 				return (str);
 			}
@@ -216,26 +198,11 @@ char	*get_next_line(const int fd)
 			// 5 stdin ne contient pas de '\n' dans READ_SIZE
 			else
 			{
-				char *str = malloc(READ_SIZE * sizeof(char));
-				int size = READ_SIZE;
+				char *str = malloc((buff_len + 1) * sizeof(char));
 
 				my_memcpy(str, buff, READ_SIZE);
-				str += READ_SIZE;
-				while(pos_stream == -1)
-				{
-					pos_stream = find_n(stream);
-					int readchar = read(fd, stream, READ_SIZE);
-					if (readchar == -1)
-						return (NULL);
-					if (my_strlen(str) == READ_SIZE)
-						my_memcpy(str, stream, READ_SIZE);
-					str = str_merge(str, stream, READ_SIZE);
-					size += READ_SIZE;
-				}
-
-				pos_stream = find_n(stream);
-				my_memcpy(buff, stream, size - pos_stream);
-				buff[size - pos_stream] = '\0';
+				str[buff_len] = '\0';
+				str = str_merge(str, get_next_line(fd), my_strlen(str));
 
 				return (str);
 			}
