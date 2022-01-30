@@ -86,7 +86,7 @@ static char	*str_merge(char *dest, char *src)
 	my_memcpy(new, dest, dest_len);
 	my_memcpy(new + dest_len, src, src_len);
 
-	new[dest_len + src_len + 1] = '\0';
+	new[dest_len + src_len] = '\0';
 	free(dest);
 
 	return (new);
@@ -96,7 +96,7 @@ int	find_n(char *str)
 {
 	int i = 0;
 
-	while (str[i] != '\0' && i < READ_SIZE)
+	while (str[i] != '\0')
 	{
 		if (str[i] == '\n')
 			return (i);
@@ -108,7 +108,7 @@ int	find_n(char *str)
 
 char	*get_next_line(const int fd)
 {
-	static char buff[READ_SIZE] = "\0";
+	static char buff[READ_SIZE + 1] = "\0";
 	int pos = find_n(buff);
 
 	// 2 buff n'est pas vide et contient un '\n'
@@ -132,7 +132,7 @@ char	*get_next_line(const int fd)
 		// 1 buff est vide
 		if (buff[0] == '\0')
 		{
-			char stream[READ_SIZE];
+			char stream[READ_SIZE + 1];
 			int readchar = read(fd, stream, READ_SIZE);
 			if (readchar == -1 || readchar == 0)
 				return (NULL);
@@ -167,7 +167,7 @@ char	*get_next_line(const int fd)
 		// 3 buff n'est pas vide et ne contient pas '\n'
 		else
 		{
-			char stream[READ_SIZE];
+			char stream[READ_SIZE + 1];
 			int readchar = read(fd, stream, READ_SIZE);
 			int buff_len = my_strlen(buff);
 
@@ -216,11 +216,17 @@ char	*get_next_line(const int fd)
 			else
 			{
 				char *str = malloc((buff_len + readchar + 1) * sizeof(char));
+				char *str_rec;
 
 				my_memcpy(str, buff, buff_len);
 				str[buff_len] = '\0';
+				buff[0] = '\0';
+				str = str_merge(str, stream);
+				str_rec = get_next_line(fd);
+				str = str_merge(str, str_rec);
+				free(str_rec);
 
-				return (str_merge(str, get_next_line(fd)));
+				return (str);
 			}
 		}
 	}
