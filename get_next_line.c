@@ -96,7 +96,7 @@ int	find_n(char *str)
 {
 	int i = 0;
 
-	while (str[i] != '\0')
+	while (str[i] != '\0' && i < READ_SIZE)
 	{
 		if (str[i] == '\n')
 			return (i);
@@ -136,6 +136,7 @@ char	*get_next_line(const int fd)
 			int readchar = read(fd, stream, READ_SIZE);
 			if (readchar == -1 || readchar == 0)
 				return (NULL);
+			stream[readchar] = '\0';
 			int pos_stream = find_n(stream);
 
 			// 4 stdin contient un '\n' dans READ_SIZE
@@ -158,6 +159,7 @@ char	*get_next_line(const int fd)
 			else
 			{
 				my_memcpy(buff, stream, readchar);
+				buff[readchar] = '\0';
 				return (get_next_line(fd));
 			}
 		}
@@ -174,12 +176,14 @@ char	*get_next_line(const int fd)
 				char *str = malloc((buff_len + 1) * sizeof(char));
 
 				my_memcpy(str, buff, buff_len);
+				str[buff_len] = '\0';
 				buff[0] = '\0';
 
 				return (str);
 			}
 			if (readchar == -1)
 				return (NULL);
+			stream[readchar] = '\0';
 			int pos_stream = find_n(stream);
 
 			// 4 stdin contient un '\n' dans READ_SIZE
@@ -190,6 +194,7 @@ char	*get_next_line(const int fd)
 					char *str = malloc((buff_len + 1) * sizeof(char));
 
 					my_memcpy(str, buff, buff_len);
+					str[buff_len] = '\0';
 					buff[0] = '\0';
 
 					return (str);
@@ -202,6 +207,7 @@ char	*get_next_line(const int fd)
 				my_memcpy(str + buff_len, stream, pos_stream);
 				my_memcpy(buff, stream + pos_stream + 1, readchar - pos_stream);
 				buff[readchar - (pos_stream + 1)] = '\0';
+				str[buff_len + pos_stream] = '\0';
 
 				return (str);
 			}
