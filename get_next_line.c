@@ -5,7 +5,7 @@
 
 #include "get_next_line.h"
 
-static int	my_strlen(char *str)
+static size_t	my_strlen(char *str)
 {
 	int i = 0;
 
@@ -20,15 +20,6 @@ static int	my_strlen(char *str)
 	return (i);
 }
 
-static void	copy_long_memcpy(long *dest_long, const long *src_long, size_t *n)
-{
-	n -= sizeof(long) * 4;
-	*dest_long++ = *src_long++;
-	*dest_long++ = *src_long++;
-	*dest_long++ = *src_long++;
-	*dest_long++ = *src_long++;
-}
-
 static void	*my_memcpy(void *dest, const void *src, size_t n)
 {
 	char *dest_str;
@@ -38,7 +29,11 @@ static void	*my_memcpy(void *dest, const void *src, size_t n)
 
 	while (n >= sizeof(long) * 4)
 	{
-		copy_long_memcpy(dest_long, src_long, &n);
+		n -= sizeof(long) * 4;
+		*dest_long++ = *src_long++;
+		*dest_long++ = *src_long++;
+		*dest_long++ = *src_long++;
+		*dest_long++ = *src_long++;
 	}
 	while (n >= sizeof(long))
 	{
@@ -137,7 +132,7 @@ static void	fill_buff(char *buff, char *src, int size, int length)
 static char	*case_buff_not_empty_with_return(char *buff, int pos)
 {
 	char *str;
-	int buff_len = my_strlen(buff);
+	size_t buff_len = my_strlen(buff);
 
 	str = fill_str(buff, pos);
 	if (str == NULL)
@@ -179,8 +174,14 @@ static char	*case_buff_empty(char *buff, int fd)
 	{
 		str = fill_str_buff_case_buff_empty_without_return(buff, stream, pos_stream, readchar);
 
-		return ((str) ? str : NULL);
+		return (str);
 	} else {
+		if (readchar != READ_SIZE)
+		{
+			str = fill_str(stream, readchar);
+
+			return (str);
+		}
 		fill_buff(buff, stream, readchar, readchar);
 
 		return (get_next_line(fd));
@@ -189,7 +190,7 @@ static char	*case_buff_empty(char *buff, int fd)
 
 static char	*case_stdin_with_return(char *buff, char *stream, int pos_stream, int readchar)
 {
-	int buff_len = my_strlen(buff);
+	size_t buff_len = my_strlen(buff);
 	char *str;
 
 	str = malloc((pos_stream + 1 + buff_len) * sizeof(char));
@@ -206,11 +207,13 @@ static char	*case_stdin_with_return(char *buff, char *stream, int pos_stream, in
 
 static char	*case_stdin_without_return(char *buff, char *stream, int readchar, int fd)
 {
-	int buff_len = my_strlen(buff);
+	size_t buff_len = my_strlen(buff);
 	char *str_rec;
 	char *str;
 
 	str = malloc((buff_len + readchar + 1) * sizeof(char));
+	if (str == NULL)
+		return (NULL);
 
 	my_memcpy(str, buff, buff_len);
 	str[buff_len] = '\0';
@@ -218,6 +221,9 @@ static char	*case_stdin_without_return(char *buff, char *stream, int readchar, i
 	buff[0] = '\0';
 
 	str = str_merge(str, stream);
+	if (readchar != READ_SIZE)
+		return (str);
+
 	str_rec = get_next_line(fd);
 	str = str_merge(str, str_rec);
 	free(str_rec);
@@ -225,14 +231,16 @@ static char	*case_stdin_without_return(char *buff, char *stream, int readchar, i
 	return (str);
 }
 
-static char	*manage_cases_readchar(char *buff, int buff_len, int readchar)
+static char	*manage_cases_readchar(char *buff, size_t buff_len, int readchar)
 {
+	char *str;
+
 	if (readchar == 0)
 	{
-		char *str = fill_str(buff, buff_len);
+		str = fill_str(buff, buff_len);
 		buff[0] = '\0';
 
-		return ((str) ? str : NULL);
+		return (str);
 	}
 	if (readchar == -1)
 		return (NULL);
@@ -244,7 +252,7 @@ static char	*case_buff_not_empty(char *buff, int fd)
 {
 	char stream[READ_SIZE + 1];
 	int readchar;
-	int buff_len = my_strlen(buff);
+	size_t buff_len = my_strlen(buff);
 	char *str;
 
 	readchar = read(fd, stream, READ_SIZE);
@@ -257,7 +265,7 @@ static char	*case_buff_not_empty(char *buff, int fd)
 		str = case_stdin_with_return(buff, stream, find_n(stream), readchar);
 	else
 		str = case_stdin_without_return(buff, stream, readchar, fd);
-	return ((str) ? str : NULL);
+	return (str);
 }
 
 char	*get_next_line(const int fd)
@@ -269,9 +277,11 @@ char	*get_next_line(const int fd)
 	if (pos != -1)
 		str = case_buff_not_empty_with_return(buff, pos);
 	else if (buff[0] == '\0')
+	{
 		str =  case_buff_empty(buff, fd);
+	}
 	else
 		str = case_buff_not_empty(buff, fd);
 
-	return((str) ? str : NULL);
+	return(str);
 }
