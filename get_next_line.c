@@ -20,6 +20,15 @@ static int	my_strlen(char *str)
 	return (i);
 }
 
+static void	copy_long_memcpy(long *dest_long, const long *src_long, size_t *n)
+{
+	n -= sizeof(long) * 4;
+	*dest_long++ = *src_long++;
+	*dest_long++ = *src_long++;
+	*dest_long++ = *src_long++;
+	*dest_long++ = *src_long++;
+}
+
 static void	*my_memcpy(void *dest, const void *src, size_t n)
 {
 	char *dest_str;
@@ -29,11 +38,7 @@ static void	*my_memcpy(void *dest, const void *src, size_t n)
 
 	while (n >= sizeof(long) * 4)
 	{
-		n -= sizeof(long) * 4;
-		*dest_long++ = *src_long++;
-		*dest_long++ = *src_long++;
-		*dest_long++ = *src_long++;
-		*dest_long++ = *src_long++;
+		copy_long_memcpy(dest_long, src_long, &n);
 	}
 	while (n >= sizeof(long))
 	{
