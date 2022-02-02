@@ -129,7 +129,7 @@ static void	fill_buff(char *buff, char *src, int size, int length)
 	buff[length] = '\0';
 }
 
-static char	*case_buff_not_empty_with_return(char *buff, int pos)
+static char	*case_buff_not_empty_with_line_feed(char *buff, int pos)
 {
 	char *str;
 	size_t buff_len = my_strlen(buff);
@@ -144,15 +144,18 @@ static char	*case_buff_not_empty_with_return(char *buff, int pos)
 	return (str);
 }
 
-static char	*fill_str_buff_case_buff_empty_without_return(char *buff, char *stream, int pos_stream, int readchar)
+static char	*fill_spe_without_line_feed(char *buff, char *stream, int pos_stream, int readchar)
 {
 	char *str;
+	char *src = stream + pos_stream + 1;
+	int size = readchar - pos_stream;
+	int length = readchar - (pos_stream + 1);
 
 	str = fill_str(stream, pos_stream);
 	if (str == NULL)
 		return (NULL);
 
-	fill_buff(buff, stream + pos_stream + 1, readchar - pos_stream, readchar - (pos_stream + 1));
+	fill_buff(buff, src, size, length);
 
 	return (str);
 }
@@ -162,7 +165,6 @@ static char	*case_buff_empty(char *buff, int fd)
 	char stream[READ_SIZE + 1];
 	int readchar;
 	int pos_stream;
-	char *str;
 
 	readchar = read(fd, stream, READ_SIZE);
 	if (readchar == -1 || readchar == 0)
@@ -171,27 +173,23 @@ static char	*case_buff_empty(char *buff, int fd)
 	stream[readchar] = '\0';
 	pos_stream = find_n(stream);
 	if (pos_stream != -1)
-	{
-		str = fill_str_buff_case_buff_empty_without_return(buff, stream, pos_stream, readchar);
-
-		return (str);
-	} else {
+		return (fill_spe_without_line_feed(buff, stream, pos_stream, readchar));
+	else {
 		if (readchar != READ_SIZE)
-		{
-			str = fill_str(stream, readchar);
+			return (fill_str(stream, readchar));
 
-			return (str);
-		}
 		fill_buff(buff, stream, readchar, readchar);
 
 		return (get_next_line(fd));
 	}
 }
 
-static char	*case_stdin_with_return(char *buff, char *stream, int pos_stream, int readchar)
+static char	*case_stdin_with_line_feed(char *buff, char *stream, int pos_stream, int readchar)
 {
 	size_t buff_len = my_strlen(buff);
 	char *str;
+	char *src = stream + pos_stream + 1;
+	int size = readchar - pos_stream;
 
 	str = malloc((pos_stream + 1 + buff_len) * sizeof(char));
 	if (str == NULL)
@@ -199,13 +197,13 @@ static char	*case_stdin_with_return(char *buff, char *stream, int pos_stream, in
 
 	my_memcpy(str, buff, buff_len);
 	my_memcpy(str + buff_len, stream, pos_stream);
-	fill_buff(buff, stream + pos_stream + 1, readchar - pos_stream, readchar - (pos_stream + 1));
+	fill_buff(buff, src, size, readchar - (pos_stream + 1));
 	str[buff_len + pos_stream] = '\0';
 
 	return(str);
 }
 
-static char	*case_stdin_without_return(char *buff, char *stream, int readchar, int fd)
+static char	*case_stdin_without_line_feed(char *buff, char *stream, int readchar, int fd)
 {
 	size_t buff_len = my_strlen(buff);
 	char *str_rec;
@@ -262,9 +260,9 @@ static char	*case_buff_not_empty(char *buff, int fd)
 	stream[readchar] = '\0';
 
 	if (find_n(stream) != -1)
-		str = case_stdin_with_return(buff, stream, find_n(stream), readchar);
+		str = case_stdin_with_line_feed(buff, stream, find_n(stream), readchar);
 	else
-		str = case_stdin_without_return(buff, stream, readchar, fd);
+		str = case_stdin_without_line_feed(buff, stream, readchar, fd);
 	return (str);
 }
 
@@ -275,7 +273,7 @@ char	*get_next_line(const int fd)
 	char *str;
 
 	if (pos != -1)
-		str = case_buff_not_empty_with_return(buff, pos);
+		str = case_buff_not_empty_with_line_feed(buff, pos);
 	else if (buff[0] == '\0')
 	{
 		str =  case_buff_empty(buff, fd);
